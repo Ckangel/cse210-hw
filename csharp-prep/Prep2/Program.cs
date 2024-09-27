@@ -7,7 +7,7 @@ class Program
         Console.WriteLine("Hello Prep2 World!");
     }
 }
-// Ask the user for their grade percentage
+// Ask the user for their grade percentaged
     Console.Write("Enter your grade percentage: ");
     int percentage = Convert.ToInt32(Console.ReadLine());
 
