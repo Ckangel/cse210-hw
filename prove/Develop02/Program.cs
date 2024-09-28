@@ -1,27 +1,18 @@
-using System;
-
-class Program
-{
-    static void Main(string[] args)
-    {
-        Console.WriteLine("Hello Develop02 World!");
-    }
-}
+// From more research with W3Schools and C# learning apps I added Additional Improved CSV handling, Additional Entry information for mood and tags for better categorization
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;  // Install the Newtonsoft.Json NuGet package for JSON handling.
 
-namespace JournalApp
-// From more research with W3Schools I added Additional Library Newtonsoft.Json to handle JSON serialization/deserialization with Reminder System, Improved CSV handling, JSON support and Additional Entry information for mood and tags for better categorization
+namespace SimpleJournalApp
 {
+    // Entry class to represent a journal entry
     public class Entry
     {
         public string Date { get; set; }
         public string Prompt { get; set; }
         public string Response { get; set; }
-        public string Mood { get; set; }      // New: Mood tracking
-        public List<string> Tags { get; set; } // New: Tagging system
+        public string Mood { get; set; }
+        public List<string> Tags { get; set; }
 
         public Entry(string date, string prompt, string response, string mood, List<string> tags)
         {
@@ -32,23 +23,37 @@ namespace JournalApp
             Tags = tags;
         }
 
-        // Improved CSV-friendly display format
-        public string ToCsvFormat()
-        {
-            string escapedResponse = Response.Replace("\"", "\"\"");  // Escape quotes by doubling them
-            string escapedPrompt = Prompt.Replace("\"", "\"\"");
-            string tags = string.Join(",", Tags);
-
-            return $"\"{Date}\",\"{escapedPrompt}\",\"{escapedResponse}\",\"{Mood}\",\"{tags}\"";
-        }
-
+        // Display entry in a readable format
         public override string ToString()
         {
-            string tags = string.Join(", ", Tags);
-            return $"Date: {Date}\nPrompt: {Prompt}\nResponse: {Response}\nMood: {Mood}\nTags: {tags}";
+            return $"Date: {Date}\nPrompt: {Prompt}\nResponse: {Response}\nMood: {Mood}\nTags: {string.Join(", ", Tags)}";
+        }
+
+        // Format entry to be saved as a CSV line
+        public string ToCsv()
+        {
+            string escapedResponse = Response.Replace("\"", "\"\""); // Escape double quotes
+            string escapedPrompt = Prompt.Replace("\"", "\"\"");
+            string tagsString = string.Join(";", Tags); // Use ";" to separate tags
+            return $"\"{Date}\",\"{escapedPrompt}\",\"{escapedResponse}\",\"{Mood}\",\"{tagsString}\"";
+        }
+
+        // Create an entry from a CSV line
+        public static Entry FromCsv(string csvLine)
+        {
+            // Split the line using commas but consider text within quotes
+            string[] parts = csvLine.Split(new[] { "\",\"" }, StringSplitOptions.None);
+            string date = parts[0].Trim('"');
+            string prompt = parts[1];
+            string response = parts[2];
+            string mood = parts[3].Trim('"');
+            List<string> tags = new List<string>(parts[4].Trim('"').Split(';'));
+
+            return new Entry(date, prompt, response, mood, tags);
         }
     }
 
+    // Journal class to manage multiple entries
     public class Journal
     {
         private List<Entry> _entries;
@@ -58,12 +63,13 @@ namespace JournalApp
             _entries = new List<Entry>();
         }
 
+        // Add a new entry to the journal
         public void AddEntry(Entry entry)
         {
             _entries.Add(entry);
         }
 
-        // Display all entries
+        // Display all entries in the journal
         public void DisplayJournal()
         {
             foreach (var entry in _entries)
@@ -73,20 +79,20 @@ namespace JournalApp
             }
         }
 
-        // Save journal to a CSV file
+        // Save the journal to a CSV file
         public void SaveToCsv(string filename)
         {
             using (StreamWriter writer = new StreamWriter(filename))
             {
-                writer.WriteLine("Date,Prompt,Response,Mood,Tags"); // CSV header
+                writer.WriteLine("Date,Prompt,Response,Mood,Tags");
                 foreach (var entry in _entries)
                 {
-                    writer.WriteLine(entry.ToCsvFormat());
+                    writer.WriteLine(entry.ToCsv());
                 }
             }
         }
 
-        // Load journal from a CSV file
+        // Load the journal from a CSV file
         public void LoadFromCsv(string filename)
         {
             _entries.Clear();
@@ -96,57 +102,9 @@ namespace JournalApp
                 reader.ReadLine(); // Skip the header
                 while ((line = reader.ReadLine()) != null)
                 {
-                    var parts = ParseCsvLine(line);
-                    string date = parts[0];
-                    string prompt = parts[1];
-                    string response = parts[2];
-                    string mood = parts[3];
-                    List<string> tags = new List<string>(parts[4].Split(','));
-                    _entries.Add(new Entry(date, prompt, response, mood, tags));
+                    _entries.Add(Entry.FromCsv(line));
                 }
             }
-        }
-
-        // Helper method to handle CSV parsing
-        private string[] ParseCsvLine(string line)
-        {
-            List<string> result = new List<string>();
-            bool insideQuote = false;
-            string currentField = "";
-
-            foreach (char c in line)
-            {
-                if (c == '"')
-                {
-                    insideQuote = !insideQuote; // Toggle quote state
-                }
-                else if (c == ',' && !insideQuote)
-                {
-                    result.Add(currentField);
-                    currentField = "";
-                }
-                else
-                {
-                    currentField += c;
-                }
-            }
-
-            result.Add(currentField); // Add the last field
-            return result.ToArray();
-        }
-
-        // Save journal to JSON
-        public void SaveToJson(string filename)
-        {
-            string json = JsonConvert.SerializeObject(_entries, Formatting.Indented);
-            File.WriteAllText(filename, json);
-        }
-
-        // Load journal from JSON
-        public void LoadFromJson(string filename)
-        {
-            string json = File.ReadAllText(filename);
-            _entries = JsonConvert.DeserializeObject<List<Entry>>(json);
         }
     }
 
@@ -164,9 +122,7 @@ namespace JournalApp
                 Console.WriteLine("2. Display journal");
                 Console.WriteLine("3. Save journal to CSV");
                 Console.WriteLine("4. Load journal from CSV");
-                Console.WriteLine("5. Save journal to JSON");
-                Console.WriteLine("6. Load journal from JSON");
-                Console.WriteLine("7. Exit");
+                Console.WriteLine("5. Exit");
                 Console.Write("Choose an option: ");
                 string choice = Console.ReadLine();
 
@@ -185,12 +141,6 @@ namespace JournalApp
                         LoadFromCsv(journal);
                         break;
                     case "5":
-                        SaveToJson(journal);
-                        break;
-                    case "6":
-                        LoadFromJson(journal);
-                        break;
-                    case "7":
                         running = false;
                         break;
                     default:
@@ -203,15 +153,7 @@ namespace JournalApp
         static void WriteNewEntry(Journal journal)
         {
             string date = DateTime.Now.ToString("yyyy-MM-dd");
-            string[] prompts = new[] { "What made you happy today?", 
-            "What did you learn today?", "Who inspired you today?", 
-            "What are you grateful for?", 
-            "What challenged you today?", 
-            "Who was the most interesting person I interacted with today?",
-            "What was the best part of my day?",
-            "How did I see the hand of the Lord in my life today?",
-            "What was the strongest emotion I felt today?",
-            "If I had one thing I could do over today, what would it be?" };
+            string[] prompts = new[] { "What made you happy today?", "What did you learn today?", "Who inspired you today?", "What are you grateful for?", "What challenged you today?" };
             Random random = new Random();
             string prompt = prompts[random.Next(prompts.Length)];
 
@@ -243,22 +185,6 @@ namespace JournalApp
             string filename = Console.ReadLine();
             journal.LoadFromCsv(filename);
             Console.WriteLine("Journal loaded from CSV.");
-        }
-
-        static void SaveToJson(Journal journal)
-        {
-            Console.Write("Enter the filename to save as JSON: ");
-            string filename = Console.ReadLine();
-            journal.SaveToJson(filename);
-            Console.WriteLine("Journal saved to JSON.");
-        }
-
-        static void LoadFromJson(Journal journal)
-        {
-            Console.Write("Enter the filename to load from JSON: ");
-            string filename = Console.ReadLine();
-            journal.LoadFromJson(filename);
-            Console.WriteLine("Journal loaded from JSON.");
         }
     }
 }
