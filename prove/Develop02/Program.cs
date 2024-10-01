@@ -153,7 +153,16 @@ namespace SimpleJournalApp
         static void WriteNewEntry(Journal journal)
         {
             string date = DateTime.Now.ToString("yyyy-MM-dd");
-            string[] prompts = new[] { "What made you happy today?", "What did you learn today?", "Who inspired you today?", "What are you grateful for?", "What challenged you today?" };
+            string[] prompts = new[] { "What made you happy today?", 
+            "What did you learn today?", 
+            "Who inspired you today?", 
+            "What are you grateful for?", 
+            "What challenged you today?", 
+            "Who was the most interesting person I interacted with today?", 
+            "What was the best part of my day?",
+            "How did I see the hand of the Lord in my life today?", 
+            "What was the strongest emotion I felt today?", 
+            "If I had one thing I could do over today, what would it be?" };
             Random random = new Random();
             string prompt = prompts[random.Next(prompts.Length)];
 
