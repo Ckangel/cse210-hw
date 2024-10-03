@@ -18,6 +18,7 @@ namespace SimpleJournalApp
         {
             Date = date;
             Prompt = prompt;
+
             Response = response;
             Mood = mood;
             Tags = tags;
