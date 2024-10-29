@@ -1,18 +1,29 @@
-    // SimpleGoal subclass
-    public class SimpleGoal : Goal
+public class SimpleGoal : Goal
+{
+    public SimpleGoal(string name, int points) : base(name: name, points) { }
+
+    public override string GetStringRepresentation()
     {
-        public bool _isComplete;
-
-        public SimpleGoal(string name, string description, int points)
-            : base(name, description, points) { }
-
-        public override void RecordEvent()
-        {
-            _isComplete = true;
-        }
-
-        public override bool IsComplete() => _isComplete;
-
-        public override string GetStringRepresentation() =>
-            $"SimpleGoal,{_shortName},{_description},{_points},{_isComplete}";
+        throw new NotImplementedException();
     }
+
+    public override bool IsComplete()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void RecordEvent()
+    {
+        NewMethod();
+    }
+
+    private void NewMethod()
+    {
+        NewMethod1();
+
+        void NewMethod1()
+        {
+            IsComplete = true;
+        }
+    }
+}
